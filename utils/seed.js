@@ -1,52 +1,85 @@
-const connection = require('../config/connection');
-const { Course, Student } = require('../models');
-const { getRandomName, getRandomAssignments } = require('./data');
+const connection = require("../config/connection");
+const { Reaction, Thought, User } = require("../models");
 
-connection.on('error', (err) => err);
+connection.on("error", (err) => err);
 
-connection.once('open', async () => {
-  console.log('connected');
+connection.once("open", async () => {
+  console.log("connected");
 
-  // Drop existing courses
-  await Course.deleteMany({});
+  const userData = [
+    { username: "Shao", email: "shao@gmail.com", },
+    { username: "Yen", email: "yen@gmail.com" },
+    { username: "Alpha", email: "alpha@yahoo.com" },
+    { username: "Beta", email: "beta@gmail.com" },
+  ];
 
-  // Drop existing students
-  await Student.deleteMany({});
+  const thoughtData = [
+    {
+      thoughtText: "This movie is amazing, I love it.",
+      userName: "Shao",
+      reactions: [{ reactionBody: "It's the best", userName: "Yen" }],
+    },
+    {
+      thoughtText: "I couldn't wake up this morning, I was too tried",
+      userName: "Alpha",
+      reactions: [
+        { reactionBody: "Sleep more", userName: "Beta" },
+        { reactionBody: "I feel the same", userName: "Yen" },
+      ],
+    },
+    {
+      thoughtText:
+        "I think we all need to relocate to Mars.",
+      userName: "Yen",
+      reactions: [],
+    },
+  ];
 
-  // Create empty array to hold the students
-  const students = [];
+  // Drop existing users
+  await User.deleteMany({});
 
-  // Get some random assignment objects using a helper function that we imported from ./data
-  const assignments = getRandomAssignments(20);
+  // Drop existing thoughts
+  await Thought.deleteMany({});
 
-  // Loop 20 times -- add students to the students array
-  for (let i = 0; i < 20; i++) {
-    const fullName = getRandomName();
-    const first = fullName.split(' ')[0];
-    const last = fullName.split(' ')[1];
-    const github = `${first}${Math.floor(Math.random() * (99 - 18 + 1) + 18)}`;
+  // Drop existing reactions
+  //await Reaction.deleteMany({});
 
-    students.push({
-      first,
-      last,
-      github,
-      assignments,
-    });
+  // Add users to the collection and await the results
+  await User.collection.insertMany(userData);
+
+  let user;
+  let newThought;
+  for (let thought of thoughtData) {
+    console.log("Searching for ", thought.userName);
+    user = await User.findOne({ username: thought.userName });
+    if (!user) {
+      console.log("something went wrong");
+      exit();
+    } else {
+      console.log("Found", user.username, user.thoughts);
+    }
+    newThought = await Thought.collection.insertOne(thought);
+
+    await user.thoughts.push(newThought.insertedId);
+    try {
+      await user.save();
+      console.log("saved", user);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  // Add students to the collection and await the results
-  await Student.collection.insertMany(students);
+  const newUsers = await User.find();
 
-  // Add courses to the collection and await the results
-  await Course.collection.insertOne({
-    courseName: 'UCLA',
-    inPerson: false,
-    students: [...students],
-  });
+  let friends;
+  let friendsIds;
+  for (let thisUser of newUsers) {
+    friends = await User.find({ _id: { $nin: [thisUser._id] } });
+    friendsIds = friends.map((item) => item._id);
+    thisUser.friends = friendsIds;
+    await thisUser.save();
+  }
 
-  // Log out the seed data to indicate what should appear in the database
-  console.table(students);
-  console.table(assignments);
-  console.info('Seeding complete! 🌱');
+  console.info("Seeding complete!");
   process.exit(0);
 });
