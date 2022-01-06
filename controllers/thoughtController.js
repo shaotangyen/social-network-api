@@ -1,4 +1,4 @@
-const Thought = require("../models/Thought.js");
+const { Thought, User } = require("../models");
 
 module.exports = {
   // Get all thoughts
@@ -23,10 +23,14 @@ module.exports = {
   },
   // Create a thought
   createThought(req, res) {
-    Thought.create({
-      thoughText: req.body.thoughtText,
-      thoughtName: req.body.thoughtName,
-    })
+    Thought.create(req.body)
+      .then((thought) => {
+        return User.findByIdAndUpdate(
+          { _id: req.params.userId },
+          { $push: { thoughts: thought._id } },
+          { new: true }
+        );
+      })
       .then((thought) => res.json(thought))
       .catch((err) => {
         console.log(err);
@@ -35,14 +39,28 @@ module.exports = {
   },
   // Delete a thought
   deleteThought(req, res) {
-    Thought.findOneAndDelete({ _id: req.params.thoughtId })
-      .then((thought) =>
-        !thought
-          ? res.status(404).json({ message: "No thought with that ID" })
-          : Reaction.deleteMany({ _id: { $in: thought.reactions } })
-      )
-      .then(() => res.json({ message: "Thought and Reactions deleted!" }))
-      .catch((err) => res.status(500).json(err));
+    User.findByIdAndUpdate(
+      { _id: req.params.userId },
+      { $pull: { thoughts: req.params.thoughtId } },
+      { new: true }
+    )
+      .then(dbUserData => {
+        if (!dbUserData) {
+          res.status(404).json({ message: 'No user found with this id' })
+          return;
+        }
+        res.json(dbUserData);
+      })
+    return Thought.findByIdAndDelete(
+      { _id: req.params.thoughtId }
+    )
+      .then(dbThoughtData => {
+        if (!dbThoughtData) {
+          res.status(404).json({ message: 'No thought found with this id' })
+
+        }
+      })
+      .catch(err => res.json(err));
   },
   // Update thought
   updateThought(req, res) {

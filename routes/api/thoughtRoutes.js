@@ -12,12 +12,19 @@ const {
 
 router.route("/")
     .get(getThoughts)
+
+router
+    .route("/:userId")
     .post(createThought);
 
 router
     .route("/:thoughtId")
     .get(getSingleThought)
     .put(updateThought)
+    //.delete(deleteThought);
+
+    router
+    .route("/:userId/:thoughtId")
     .delete(deleteThought);
 
 router
