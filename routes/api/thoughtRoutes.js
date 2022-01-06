@@ -21,9 +21,8 @@ router
     .route("/:thoughtId")
     .get(getSingleThought)
     .put(updateThought)
-    //.delete(deleteThought);
 
-    router
+router
     .route("/:userId/:thoughtId")
     .delete(deleteThought);
 
