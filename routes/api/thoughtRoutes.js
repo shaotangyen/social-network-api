@@ -8,7 +8,9 @@ const {
   deleteThought,
 } = require("../../controllers/thoughtController.js");
 
-router.route("/").get(getThoughts).post(createThought);
+router.route("/")
+    .get(getThoughts)
+    .post(createThought);
 
 router
   .route("/:thoughtId")

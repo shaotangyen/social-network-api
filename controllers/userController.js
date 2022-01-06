@@ -56,4 +56,38 @@ module.exports = {
       )
       .catch((err) => res.status(500).json(err));
   },
+  // Add a friend
+  addFriend(req, res) {
+    User.findByIdAndUpdate(
+      req.params.id,
+      { $push: { friends: req.params.friendId } },
+      { new: true },
+    )
+      .select('-__v')
+      .then(user =>
+        !user
+          ? res.status(404).json({ message: "Error: User does not exist." })
+          : res.json({ message: `Friends updated successfully`, user })
+      )
+      .catch((err) => {
+        console.log("An error ha occurred: ", err);
+        res.status(500).json(err);
+      });
+  },
+
+  // Delete a friend
+  deleteFriend(req, res) {
+    User.findByIdAndUpdate(
+      { _id: req.params.id },
+      { $pull: { friends: req.params.friendId } },
+      { new: true }
+    )
+      .select('-__v')
+      .then(user =>
+        !user
+          ? res.status(404).json({ message: "Error: User does not exist." })
+          : res.json({ message: `Friend removed successfully`, user })
+      )
+      .catch(err => res.status(400).json(err));
+  },
 };
