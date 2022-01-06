@@ -74,7 +74,6 @@ module.exports = {
         res.status(500).json(err);
       });
   },
-
   // Delete a friend
   deleteFriend(req, res) {
     User.findByIdAndUpdate(
@@ -88,6 +87,9 @@ module.exports = {
           ? res.status(404).json({ message: "Error: User does not exist." })
           : res.json({ message: `Friend removed successfully`, user })
       )
-      .catch(err => res.status(400).json(err));
+      .catch((err) => {
+        console.log("An error ha occurred: ", err);
+        res.status(500).json(err);
+      });
   },
 };
