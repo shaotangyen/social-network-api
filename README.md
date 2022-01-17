@@ -2,7 +2,7 @@
 
 # Social Network API
 
-This is an API for a social network web application where users can share their thoughts, reac to friends' thoughts, and create a friend list. Functions including adding/updating/removing thoughts, reactions and user info.
+This is an API for a social network web application where users can share their thoughts, react to friends' thoughts, and create a friend list. Functions including adding/updating/removing thoughts, reactions and user info.
 
 ## Table of Contents
 1. [Setup](#setup)
